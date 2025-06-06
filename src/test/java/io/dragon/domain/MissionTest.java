@@ -17,4 +17,20 @@ class MissionTest {
         assertThat(mission.name()).isEqualTo(MISSION_NAME);
         assertThat(mission.rockets()).isEmpty();
     }
+
+    @Test
+    void shouldAssignRocketToMission() {
+        //given new mission
+        Mission mission = Mission.create(MISSION_NAME);
+
+        //when rocket is assigned
+        Rocket rocket = Rocket.createNewRocket("lion");
+        Mission withRocket = mission.assignRocket(rocket);
+
+        //then
+        assertThat(withRocket.rockets()).hasSize(1);
+        assertThat(withRocket.rockets()).contains(rocket);
+        assertThat(withRocket.name()).isEqualTo(MISSION_NAME);
+
+    }
 }
