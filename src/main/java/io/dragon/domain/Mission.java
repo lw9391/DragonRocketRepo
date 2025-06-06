@@ -1,4 +1,4 @@
-package io.dragon;
+package io.dragon.domain;
 
 import java.util.Collections;
 import java.util.List;

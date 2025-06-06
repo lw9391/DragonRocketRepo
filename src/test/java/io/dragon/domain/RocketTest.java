@@ -1,4 +1,4 @@
-package io.dragon;
+package io.dragon.domain;
 
 import org.junit.jupiter.api.Test;
 
@@ -19,4 +19,20 @@ class RocketTest {
         assertThat(rocket.status()).isEqualTo(RocketStatus.ON_GROUND);
         assertThat(rocket.mission()).isEmpty();
     }
+
+    @Test
+    void shouldSetRocketStatusToInRepair() {
+        //when new rocket is created
+        Rocket rocket = Rocket.createNewRocket(ROCKET_NAME);
+
+        //and rocket is set to in repair status
+        Rocket inRepair = rocket.inRepair();
+
+        //then
+        assertThat(inRepair.name()).isEqualTo(rocket.name());
+        assertThat(inRepair.status()).isEqualTo(RocketStatus.IN_REPAIR);
+        assertThat(inRepair.mission()).isEqualTo(rocket.mission());
+    }
+
+
 }

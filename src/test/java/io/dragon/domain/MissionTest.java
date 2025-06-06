@@ -1,4 +1,4 @@
-package io.dragon;
+package io.dragon.domain;
 
 import org.junit.jupiter.api.Test;
 
