@@ -4,6 +4,7 @@ import io.dragon.domain.exception.MissionAlreadyExistsException;
 import io.dragon.domain.exception.RocketAlreadyExistsException;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 public class SpaceXDragonRocketsRepository {
@@ -49,5 +50,20 @@ public class SpaceXDragonRocketsRepository {
         rocketsWithMission.forEach(rocketRepository::update);
         missionRepository.update(withRockets);
         return new GroupAssigmentResult(withRockets, rocketsWithMission);
+    }
+
+    public void setRocketAsDamaged(String rocketName) {
+        Rocket rocket = rocketRepository.findByName(rocketName)
+                .orElseThrow(() -> new IllegalStateException("Rocket does not exists"));
+        if (rocket.status() == RocketStatus.IN_REPAIR) return;
+        Rocket updatedRocket = rocket.inRepair();
+        rocketRepository.update(updatedRocket);
+        Optional<String> missionName = updatedRocket.missionName();
+        if (missionName.isPresent()) {
+            Mission mission = missionRepository.findByName(missionName.get())
+                    .orElseThrow(() -> new IllegalStateException("Mission does not exist"));
+            Mission updatedMission = mission.updateRocket(updatedRocket);
+            missionRepository.update(updatedMission);
+        }
     }
 }

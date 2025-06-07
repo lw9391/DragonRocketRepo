@@ -26,6 +26,18 @@ public record Mission(String name, Map<String, Rocket> rockets, boolean isEnded)
         else return MissionStatus.IN_PROGRESS;
     }
 
+    public Mission updateRocket(Rocket rocket) {
+        if (isEnded) throw new IllegalStateException("Mission is already ended");
+        if (!rockets.containsKey(rocket.name())) {
+            throw new IllegalArgumentException("Rocket is not assigned to the mission");
+        }
+        if (rocket.missionName().isEmpty() || !rocket.missionName().get().equals(name))
+            throw new IllegalArgumentException("Rocket is not assigned to the mision");
+        HashMap<String, Rocket> rocketsUpdated = new HashMap<>(this.rockets);
+        rocketsUpdated.put(rocket.name(), rocket);
+        return new Mission(this.name, Map.copyOf(rocketsUpdated), this.isEnded);
+    }
+
     private boolean hasDamagedRocket() {
         return rockets.entrySet().stream()
                 .anyMatch(entry -> entry.getValue().status() == RocketStatus.IN_REPAIR);

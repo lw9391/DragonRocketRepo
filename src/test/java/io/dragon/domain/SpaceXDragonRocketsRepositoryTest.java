@@ -294,4 +294,50 @@ class SpaceXDragonRocketsRepositoryTest {
         assertThat(groupAssigmentResult.rockets()).hasSize(1);
         assertThat(groupAssigmentResult.rockets()).contains(savedRocket);
     }
+
+    @Test
+    void shouldSetRocketAsDamaged() {
+        //given new rocket
+        String rocketName = "fast-o";
+        Rocket rocket = dragonRocketsRepository.addRocket(rocketName);
+        assertThat(rocket.status()).isEqualTo(RocketStatus.ON_GROUND);
+
+        //when rocket is set as damaged
+        dragonRocketsRepository.setRocketAsDamaged(rocketName);
+
+        //then rocket status is updated
+        Optional<Rocket> optionalRocket = rocketRepository.findByName(rocketName);
+        assertThat(optionalRocket).isNotEmpty();
+        Rocket savedRocket = optionalRocket.get();
+        assertThat(savedRocket.missionName()).isEmpty();
+        assertThat(savedRocket.name()).isEqualTo(rocketName);
+        assertThat(savedRocket.status()).isEqualTo(RocketStatus.IN_REPAIR);
+    }
+
+    @Test
+    void shouldSetRocketAsDamagedWhenRocketHasMissionAssigned() {
+        //given mission
+        String missionName = "mission-n";
+        Mission mission = dragonRocketsRepository.addMission(missionName);
+
+        //and rocket
+        String rocketName = "forward-x";
+        Rocket rocket = dragonRocketsRepository.addRocket(rocketName);
+
+        //when rocket is set as damaged
+        dragonRocketsRepository.assignRocketToMission(rocket, mission);
+        dragonRocketsRepository.setRocketAsDamaged(rocketName);
+
+        //then rocket is updated
+        Optional<Rocket> optionalRocket = rocketRepository.findByName(rocketName);
+        assertThat(optionalRocket).isNotEmpty();
+        Rocket savedRocket = optionalRocket.get();
+        assertThat(savedRocket.missionName()).hasValue(missionName);
+        assertThat(savedRocket.name()).isEqualTo(rocketName);
+        assertThat(savedRocket.status()).isEqualTo(RocketStatus.IN_REPAIR);
+
+        //and mission is updated
+        Mission savedMission = missionRepository.findByName(missionName).get();
+        assertThat(savedMission.rockets().get(rocketName)).isEqualTo(savedRocket);
+    }
 }
