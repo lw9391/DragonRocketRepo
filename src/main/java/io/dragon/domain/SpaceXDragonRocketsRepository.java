@@ -57,6 +57,18 @@ public class SpaceXDragonRocketsRepository {
                 .orElseThrow(() -> new IllegalStateException("Rocket does not exists"));
         if (rocket.status() == RocketStatus.IN_REPAIR) return;
         Rocket updatedRocket = rocket.inRepair();
+        updateRocket(updatedRocket);
+    }
+
+    public void setRocketAsRepaired(String rocketName) {
+        Rocket rocket = rocketRepository.findByName(rocketName)
+                .orElseThrow(() -> new IllegalStateException("Rocket does not exists"));
+        if (rocket.status() != RocketStatus.IN_REPAIR) return;
+        Rocket updatedRocket = rocket.repaired();
+        updateRocket(updatedRocket);
+    }
+
+    private void updateRocket(Rocket updatedRocket) {
         rocketRepository.update(updatedRocket);
         Optional<String> missionName = updatedRocket.missionName();
         if (missionName.isPresent()) {
@@ -66,4 +78,6 @@ public class SpaceXDragonRocketsRepository {
             missionRepository.update(updatedMission);
         }
     }
+
+
 }

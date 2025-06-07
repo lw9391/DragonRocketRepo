@@ -12,6 +12,13 @@ public record Rocket(String name, RocketStatus status, Optional<String> missionN
         return new Rocket(this.name, RocketStatus.IN_REPAIR, this.missionName);
     }
 
+    public Rocket repaired() {
+        RocketStatus rocketStatus = missionName.isEmpty()
+                ? RocketStatus.ON_GROUND
+                : RocketStatus.IN_SPACE;
+        return new Rocket(this.name, rocketStatus, this.missionName);
+    }
+
     public Rocket assignMission(String missionName) {
         if (this.missionName.isPresent()) throw new IllegalStateException("Mission already assigned");
         RocketStatus newStatus = this.status == RocketStatus.IN_REPAIR

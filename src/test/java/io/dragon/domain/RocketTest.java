@@ -2,6 +2,8 @@ package io.dragon.domain;
 
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -79,6 +81,34 @@ class RocketTest {
         assertThatThrownBy(() -> rocketWithMission.assignMission(secondMission.name()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Mission already assigned");
+    }
+
+    @Test
+    void shouldSetRocketStatusToRepaired() {
+        //when new rocket is created with IN_REPAIR status
+        Rocket rocket = new Rocket(ROCKET_NAME, RocketStatus.IN_REPAIR, Optional.empty());
+
+        //and rocket is set as repaired
+        Rocket inRepair = rocket.repaired();
+
+        //then
+        assertThat(inRepair.name()).isEqualTo(rocket.name());
+        assertThat(inRepair.status()).isEqualTo(RocketStatus.ON_GROUND);
+        assertThat(inRepair.missionName()).isEqualTo(rocket.missionName());
+    }
+
+    @Test
+    void shouldSetRocketStatusToRepairedWhenMissionIsAssigned() {
+        //when new rocket is created with IN_REPAIR status
+        Rocket rocket = new Rocket(ROCKET_NAME, RocketStatus.IN_REPAIR, Optional.of("some-mission"));
+
+        //and rocket is set as repaired
+        Rocket inRepair = rocket.repaired();
+
+        //then
+        assertThat(inRepair.name()).isEqualTo(rocket.name());
+        assertThat(inRepair.status()).isEqualTo(RocketStatus.IN_SPACE);
+        assertThat(inRepair.missionName()).isEqualTo(rocket.missionName());
     }
 
 }
