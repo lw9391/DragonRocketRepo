@@ -3,9 +3,7 @@ package io.dragon.dataaccess;
 import io.dragon.domain.Mission;
 import io.dragon.domain.MissionRepository;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class InMemoryMissionRepository implements MissionRepository {
 
@@ -39,5 +37,10 @@ public class InMemoryMissionRepository implements MissionRepository {
     @Override
     public boolean exists(String id) {
         return missions.containsKey(id);
+    }
+
+    @Override
+    public Collection<Mission> findAll() {
+        return List.copyOf(missions.values());
     }
 }

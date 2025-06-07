@@ -3,9 +3,7 @@ package io.dragon.domain;
 import io.dragon.domain.exception.MissionAlreadyExistsException;
 import io.dragon.domain.exception.RocketAlreadyExistsException;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class SpaceXDragonRocketsRepository {
 
@@ -76,6 +74,16 @@ public class SpaceXDragonRocketsRepository {
                 .forEach(rocketRepository::update);
         Mission ended = mission.endMission();
         missionRepository.update(ended);
+    }
+
+    public Summary getDragonsSummary() {
+        return new Summary(missionRepository.findAll()
+                .stream()
+                .sorted(Comparator
+                        .comparingInt((Mission mission) -> mission.rockets().size())
+                        .reversed()
+                        .thenComparing(Mission::name, Comparator.reverseOrder()))
+                .toList());
     }
 
     private void updateRocket(Rocket updatedRocket) {

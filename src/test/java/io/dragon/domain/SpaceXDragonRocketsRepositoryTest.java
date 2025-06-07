@@ -6,6 +6,8 @@ import io.dragon.domain.exception.MissionAlreadyExistsException;
 import io.dragon.domain.exception.RocketAlreadyExistsException;
 import org.junit.jupiter.api.Test;
 
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -527,5 +529,125 @@ class SpaceXDragonRocketsRepositoryTest {
         Mission endedMission = optionalMission.get();
         assertThat(endedMission.isEnded()).isTrue();
         assertThat(endedMission.rockets()).isEmpty();
+    }
+
+    @Test
+    void shouldReturnDragonsSummarySortedByRocketCountAndMissionName() {
+        //given multiple missions with different rocket counts
+        String mission1Name = "alpha-mission";
+        String mission2Name = "beta-mission";
+        String mission3Name = "gamma-mission";
+        String mission4Name = "delta-mission";
+
+        Mission mission1 = dragonRocketsRepository.addMission(mission1Name); // will have 3 rockets
+        Mission mission2 = dragonRocketsRepository.addMission(mission2Name); // will have 1 rocket
+        Mission mission3 = dragonRocketsRepository.addMission(mission3Name); // will have 3 rockets
+        Mission mission4 = dragonRocketsRepository.addMission(mission4Name); // will have 0 rockets
+
+        //and rockets assigned to missions
+        Rocket rocket1 = dragonRocketsRepository.addRocket("rocket-1");
+        Rocket rocket2 = dragonRocketsRepository.addRocket("rocket-2");
+        Rocket rocket3 = dragonRocketsRepository.addRocket("rocket-3");
+        Rocket rocket4 = dragonRocketsRepository.addRocket("rocket-4");
+        Rocket rocket5 = dragonRocketsRepository.addRocket("rocket-5");
+        Rocket rocket6 = dragonRocketsRepository.addRocket("rocket-6");
+        Rocket rocket7 = dragonRocketsRepository.addRocket("rocket-7");
+
+        // Assign rockets to create different counts
+        mission1 = dragonRocketsRepository.assignRocketToMission(rocket1, mission1).mission();
+        mission1 = dragonRocketsRepository.assignRocketToMission(rocket2, mission1).mission();
+        mission1 = dragonRocketsRepository.assignRocketToMission(rocket3, mission1).mission(); // mission1: 3 rockets
+        dragonRocketsRepository.setRocketAsDamaged(rocket1.name());
+
+        dragonRocketsRepository.assignRocketToMission(rocket4, mission2); // mission2: 1 rocket
+
+        mission3 = dragonRocketsRepository.assignRocketToMission(rocket5, mission3).mission();
+        mission3 = dragonRocketsRepository.assignRocketToMission(rocket6, mission3).mission();
+        mission3 = dragonRocketsRepository.assignRocketToMission(rocket7, mission3).mission(); // mission3: 3 rockets
+
+        // mission4: 0 rockets
+
+        //when getting dragons summary
+        Summary summary = dragonRocketsRepository.getDragonsSummary();
+
+        //then missions are sorted by rocket count descending, then by name descending
+        List<Mission> sortedMissions = summary.missions();
+        assertThat(sortedMissions).hasSize(4);
+
+        // First: missions with 3 rockets, sorted by name descending (gamma before alpha)
+        assertThat(sortedMissions.get(0).name()).isEqualTo(mission3Name); // gamma-mission (3 rockets)
+        assertThat(sortedMissions.get(0).rockets()).hasSize(3);
+
+        assertThat(sortedMissions.get(1).name()).isEqualTo(mission1Name); // alpha-mission (3 rockets)
+        assertThat(sortedMissions.get(1).rockets()).hasSize(3);
+
+        // Third: mission with 1 rocket
+        assertThat(sortedMissions.get(2).name()).isEqualTo(mission2Name); // beta-mission (1 rocket)
+        assertThat(sortedMissions.get(2).rockets()).hasSize(1);
+
+        // Last: mission with 0 rockets
+        assertThat(sortedMissions.get(3).name()).isEqualTo(mission4Name); // delta-mission (0 rockets)
+        assertThat(sortedMissions.get(3).rockets()).hasSize(0);
+        summary.printSummary();
+
+    }
+
+    @Test
+    void shouldReturnEmptySummaryWhenNoMissionsExist() {
+        //given no missions exist
+
+        //when getting dragons summary
+        Summary summary = dragonRocketsRepository.getDragonsSummary();
+
+        //then summary contains empty list
+        List<Mission> sortedMissions = summary.missions();
+        assertThat(sortedMissions).isEmpty();
+    }
+
+    @Test
+    void shouldReturnSummaryWithMissionsHavingSameRocketCountSortedByName() {
+        //given multiple missions with same rocket count
+        String mission1Name = "charlie-mission";
+        String mission2Name = "alpha-mission";
+        String mission3Name = "bravo-mission";
+
+        Mission mission1 = dragonRocketsRepository.addMission(mission1Name);
+        Mission mission2 = dragonRocketsRepository.addMission(mission2Name);
+        Mission mission3 = dragonRocketsRepository.addMission(mission3Name);
+
+        //and all missions have same number of rockets (2 each)
+        Rocket rocket1 = dragonRocketsRepository.addRocket("rocket-a");
+        Rocket rocket2 = dragonRocketsRepository.addRocket("rocket-b");
+        Rocket rocket3 = dragonRocketsRepository.addRocket("rocket-c");
+        Rocket rocket4 = dragonRocketsRepository.addRocket("rocket-d");
+        Rocket rocket5 = dragonRocketsRepository.addRocket("rocket-e");
+        Rocket rocket6 = dragonRocketsRepository.addRocket("rocket-f");
+
+        mission1 = dragonRocketsRepository.assignRocketToMission(rocket1, mission1).mission();
+        dragonRocketsRepository.assignRocketToMission(rocket2, mission1); // charlie: 2 rockets
+
+        mission2 = dragonRocketsRepository.assignRocketToMission(rocket3, mission2).mission();
+        dragonRocketsRepository.assignRocketToMission(rocket4, mission2); // alpha: 2 rockets
+
+        mission3 = dragonRocketsRepository.assignRocketToMission(rocket5, mission3).mission();
+        dragonRocketsRepository.assignRocketToMission(rocket6, mission3); // bravo: 2 rockets
+
+        //when getting dragons summary
+        Summary summary = dragonRocketsRepository.getDragonsSummary();
+
+        //then missions are sorted by name descending (since rocket count is same)
+        List<Mission> sortedMissions = summary.missions();
+        assertThat(sortedMissions).hasSize(3);
+
+        assertThat(sortedMissions.get(0).name()).isEqualTo(mission1Name); // charlie-mission
+        assertThat(sortedMissions.get(1).name()).isEqualTo(mission3Name); // bravo-mission
+        assertThat(sortedMissions.get(2).name()).isEqualTo(mission2Name); // alpha-mission
+
+        // All should have same rocket count
+        assertThat(sortedMissions.get(0).rockets()).hasSize(2);
+        assertThat(sortedMissions.get(1).rockets()).hasSize(2);
+        assertThat(sortedMissions.get(2).rockets()).hasSize(2);
+        summary.printSummary();
+
     }
 }

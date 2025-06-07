@@ -97,4 +97,18 @@ class InMemoryMissionRepositoryTest {
         exists = missionRepository.exists(missionName);
         assertThat(exists).isTrue();
     }
+
+    @Test
+    void shouldReturnAllMissions() {
+        //given
+        Mission first = Mission.create("first");
+        Mission second = Mission.create("second");
+        Mission third = Mission.create("third");
+        missionRepository.save(first);
+        missionRepository.save(second);
+        missionRepository.save(third);
+
+        //when and then
+        assertThat(missionRepository.findAll()).containsExactlyInAnyOrder(first, second, third);
+    }
 }

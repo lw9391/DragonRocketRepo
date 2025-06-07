@@ -33,4 +33,8 @@ public record Rocket(String name, RocketStatus status, Optional<String> missionN
         return new Rocket(name, newStatus, Optional.empty());
     }
 
+    public String printToStatus() {
+        return name + " - " + status.printableName;
+    }
+
 }

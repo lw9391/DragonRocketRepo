@@ -38,6 +38,14 @@ public record Mission(String name, Map<String, Rocket> rockets, boolean isEnded)
         return new Mission(this.name, Map.copyOf(rocketsUpdated), this.isEnded);
     }
 
+    public String printToStatus() {
+        StringBuilder sb = new StringBuilder();
+        sb.append(name).append(" - ").append(status().printableName).append(" - Dragons: ").append(rockets.size())
+                .append("\n");
+        rockets.values().forEach(rocket ->  sb.append("\t").append(rocket.printToStatus()).append("\n"));
+        return sb.toString();
+    }
+
     private boolean hasDamagedRocket() {
         return rockets.entrySet().stream()
                 .anyMatch(entry -> entry.getValue().status() == RocketStatus.IN_REPAIR);
