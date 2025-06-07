@@ -78,4 +78,23 @@ class InMemoryMissionRepositoryTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Mission %s doesn't exist".formatted(missionName));
     }
+
+    @Test
+    void shouldCheckIfMissionExists() {
+        //given non-existing mission
+        String missionName = "venus 111";
+
+        //when checking if mission exists
+        boolean exists = missionRepository.exists(missionName);
+
+        //then exists returns false
+        assertThat(exists).isFalse();
+
+        //when mission is added
+        missionRepository.save(Mission.create(missionName));
+
+        //then exists return true
+        exists = missionRepository.exists(missionName);
+        assertThat(exists).isTrue();
+    }
 }

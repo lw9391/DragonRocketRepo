@@ -35,4 +35,9 @@ public class InMemoryMissionRepository implements MissionRepository {
     public Optional<Mission> findByName(String id) {
         return Optional.ofNullable(missions.get(id));
     }
+
+    @Override
+    public boolean exists(String id) {
+        return missions.containsKey(id);
+    }
 }

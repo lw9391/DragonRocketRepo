@@ -10,4 +10,6 @@ public interface MissionRepository {
 
     Optional<Mission> findByName(String id);
 
+    boolean exists(String id);
+
 }

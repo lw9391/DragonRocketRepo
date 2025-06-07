@@ -1,6 +1,8 @@
 package io.dragon.domain;
 
+import io.dragon.dataaccess.InMemoryMissionRepository;
 import io.dragon.dataaccess.InMemoryRocketRepository;
+import io.dragon.domain.exception.MissionAlreadyExistsException;
 import io.dragon.domain.exception.RocketAlreadyExistsException;
 import org.junit.jupiter.api.Test;
 
@@ -12,7 +14,8 @@ import static org.assertj.core.api.Assertions.*;
 class SpaceXDragonRocketsRepositoryTest {
 
     RocketRepository rocketRepository = new InMemoryRocketRepository();
-    SpaceXDragonRocketsRepository dragonRocketsRepository = new SpaceXDragonRocketsRepository(rocketRepository);
+    MissionRepository missionRepository = new InMemoryMissionRepository();
+    SpaceXDragonRocketsRepository dragonRocketsRepository = new SpaceXDragonRocketsRepository(rocketRepository, missionRepository);
 
     @Test
     void shouldAddNewRocket() {
@@ -45,5 +48,37 @@ class SpaceXDragonRocketsRepositoryTest {
         assertThatThrownBy(() -> dragonRocketsRepository.addRocket(rocketName))
                 .isExactlyInstanceOf(RocketAlreadyExistsException.class)
                 .hasMessage("Rocket with name %s already exists in the system".formatted(rocketName));
+    }
+
+    @Test
+    void shouldAddNewMission() {
+        //given new mission name
+        String missionName = "jupyter-1";
+
+        //when new mission is added
+        Mission mission = dragonRocketsRepository.addMission(missionName);
+
+        //then mission is created
+        assertThat(mission.name()).isEqualTo(missionName);
+        assertThat(mission.rockets()).isEmpty();
+
+        //and mission is saved
+        Optional<Mission> saved = missionRepository.findByName(missionName);
+        assertThat(saved).isNotEmpty();
+        assertThat(saved).hasValue(mission);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenTryingToCreateMissionWithExistingName() {
+        //given new mission name
+        String missionName = "stone-x";
+
+        //when new mission is added twice
+        dragonRocketsRepository.addMission(missionName);
+
+        //then exception is thrown
+        assertThatThrownBy(() -> dragonRocketsRepository.addMission(missionName))
+                .isExactlyInstanceOf(MissionAlreadyExistsException.class)
+                .hasMessage("Mission with name %s already exists in the system".formatted(missionName));
     }
 }
