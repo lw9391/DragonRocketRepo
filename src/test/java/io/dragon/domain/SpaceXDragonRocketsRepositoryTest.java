@@ -110,7 +110,7 @@ class SpaceXDragonRocketsRepositoryTest {
         assertThat(optionalMission).isNotEmpty();
         Mission savedMission = optionalMission.get();
         assertThat(savedMission.rockets()).hasSize(1);
-        assertThat(savedMission.rockets().get(0)).isEqualTo(savedRocket);
+        assertThat(savedMission.rockets().get(rocketName)).isEqualTo(savedRocket);
 
         //and returned objects matches db state
         assertThat(assigmentResult.mission()).isEqualTo(savedMission);
@@ -177,7 +177,8 @@ class SpaceXDragonRocketsRepositoryTest {
         assertThat(optionalMission).isNotEmpty();
         Mission savedMission = optionalMission.get();
         assertThat(savedMission.rockets()).hasSize(3);
-        assertThat(savedMission.rockets()).containsExactlyInAnyOrder(savedRocket1, savedRocket2, savedRocket3);
+        assertThat(savedMission.rockets().values()).containsExactlyInAnyOrder(savedRocket1, savedRocket2, savedRocket3);
+        assertThat(savedMission.rockets().keySet()).containsExactlyInAnyOrder(rocket1Name, rocket2Name, rocket3Name);
 
         //and returned objects match db state
         assertThat(groupAssigmentResult.mission()).isEqualTo(savedMission);
@@ -286,7 +287,7 @@ class SpaceXDragonRocketsRepositoryTest {
         assertThat(optionalMission).isNotEmpty();
         Mission savedMission = optionalMission.get();
         assertThat(savedMission.rockets()).hasSize(1);
-        assertThat(savedMission.rockets().get(0)).isEqualTo(savedRocket);
+        assertThat(savedMission.rockets().get(rocketName)).isEqualTo(savedRocket);
 
         //and returned objects match db state
         assertThat(groupAssigmentResult.mission()).isEqualTo(savedMission);

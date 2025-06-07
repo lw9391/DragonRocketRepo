@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -37,7 +37,8 @@ class MissionTest {
 
         //then
         assertThat(withRocket.rockets()).hasSize(1);
-        assertThat(withRocket.rockets()).contains(rocket);
+        assertThat(withRocket.rockets()).containsKey(rocket.name());
+        assertThat(withRocket.rockets()).containsValue(rocket);
         assertThat(withRocket.name()).isEqualTo(MISSION_NAME);
     }
 
@@ -58,8 +59,8 @@ class MissionTest {
 
     static Stream<Mission> missions() {
         return Stream.of(
-                new Mission("without-rockets", List.of(), false),
-                new Mission("with-rockets-assigned", List.of(Rocket.createNewRocket("Falcon")), false)
+                new Mission("without-rockets", Map.of(), false),
+                new Mission("with-rockets-assigned", Map.of("Falcon", Rocket.createNewRocket("Falcon")), false)
         );
     }
 
