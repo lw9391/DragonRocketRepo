@@ -29,7 +29,7 @@ public class SpaceXDragonRocketsRepository {
         return missionRepository.save(mission);
     }
 
-    public AssigmentResult assignRocketToMission(String rocketName, String missionName) {
+    public void assignRocketToMission(String rocketName, String missionName) {
         Rocket rocket = rocketRepository.findByName(rocketName)
                 .orElseThrow(() -> new IllegalArgumentException("Rocket does not exist"));
         Mission mission = missionRepository.findByName(missionName)
@@ -38,20 +38,20 @@ public class SpaceXDragonRocketsRepository {
         Mission withRocket = mission.assignRocket(withMission);
         rocketRepository.update(withMission);
         missionRepository.update(withRocket);
-        return new AssigmentResult(withRocket, withMission);
     }
 
-    public GroupAssigmentResult assignRocketsToMission(Set<Rocket> rockets, Mission mission) {
-        List<Rocket> rocketsWithMission = rockets.stream()
-                .map(rocket -> rocket.assignMission(mission.name()))
+    public void assignRocketsToMission(Set<String> rocketsNames, String missionName) {
+        List<Rocket> rocketsWithMission = rocketsNames.stream()
+                .map(name -> rocketRepository.findByName(name).orElseThrow(() -> new IllegalArgumentException("Rocket does not exist")))
+                .map(rocket -> rocket.assignMission(missionName))
                 .toList();
-        Mission withRockets = mission;
+        Mission withRockets = missionRepository.findByName(missionName)
+                .orElseThrow(() -> new IllegalArgumentException("Mission does not exist"));
         for (Rocket withMission : rocketsWithMission) {
             withRockets = withRockets.assignRocket(withMission);
         }
         rocketsWithMission.forEach(rocketRepository::update);
         missionRepository.update(withRockets);
-        return new GroupAssigmentResult(withRockets, rocketsWithMission);
     }
 
     public void setRocketAsDamaged(String rocketName) {
@@ -100,6 +100,5 @@ public class SpaceXDragonRocketsRepository {
             missionRepository.update(updatedMission);
         }
     }
-
 
 }

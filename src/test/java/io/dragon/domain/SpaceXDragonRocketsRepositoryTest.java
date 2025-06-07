@@ -95,7 +95,7 @@ class SpaceXDragonRocketsRepositoryTest {
         dragonRocketsRepository.addRocket(rocketName);
 
         //when rocket is assigned to mission
-        AssigmentResult assigmentResult = dragonRocketsRepository.assignRocketToMission(rocketName, missionName);
+        dragonRocketsRepository.assignRocketToMission(rocketName, missionName);
 
         //then mission object is assign to rocket
         Optional<Rocket> optionalRocket = rocketRepository.findByName(rocketName);
@@ -112,19 +112,15 @@ class SpaceXDragonRocketsRepositoryTest {
         Mission savedMission = optionalMission.get();
         assertThat(savedMission.rockets()).hasSize(1);
         assertThat(savedMission.rockets().get(rocketName)).isEqualTo(savedRocket);
-
-        //and returned objects matches db state
-        assertThat(assigmentResult.mission()).isEqualTo(savedMission);
-        assertThat(assigmentResult.rocket()).isEqualTo(savedRocket);
     }
 
     @Test
     void shouldThrowExceptionWhenAssigningNonExistingRocketToMission() {
         //given new mission
         String missionName = "axis-x";
-        Mission mission = dragonRocketsRepository.addMission(missionName);
+        dragonRocketsRepository.addMission(missionName);
 
-        //and non existing rocket
+        //and non-existing rocket
         String rocketName = "fast-l";
 
         //when rocket is assigned to mission exception is thrown
@@ -134,7 +130,7 @@ class SpaceXDragonRocketsRepositoryTest {
 
     @Test
     void shouldThrowExceptionWhenAssigningRocketToNonExistingMission() {
-        //given non existing mission
+        //given non-existing mission
         String missionName = "axis-x";
 
         //and rocket
@@ -174,13 +170,13 @@ class SpaceXDragonRocketsRepositoryTest {
         String rocket1Name = "fast-m1";
         String rocket2Name = "fast-m2";
         String rocket3Name = "fast-m3";
-        Rocket rocket1 = dragonRocketsRepository.addRocket(rocket1Name);
-        Rocket rocket2 = dragonRocketsRepository.addRocket(rocket2Name);
-        Rocket rocket3 = dragonRocketsRepository.addRocket(rocket3Name);
-        Set<Rocket> rockets = Set.of(rocket1, rocket2, rocket3);
+        dragonRocketsRepository.addRocket(rocket1Name);
+        dragonRocketsRepository.addRocket(rocket2Name);
+        dragonRocketsRepository.addRocket(rocket3Name);
+        Set<String> rockets = Set.of(rocket1Name, rocket2Name, rocket3Name);
 
         //when rockets are assigned to mission
-        GroupAssigmentResult groupAssigmentResult = dragonRocketsRepository.assignRocketsToMission(rockets, mission);
+        dragonRocketsRepository.assignRocketsToMission(rockets, missionName);
 
         //then all rockets have mission assigned
         Optional<Rocket> optionalRocket1 = rocketRepository.findByName(rocket1Name);
@@ -211,52 +207,46 @@ class SpaceXDragonRocketsRepositoryTest {
         assertThat(savedMission.rockets()).hasSize(3);
         assertThat(savedMission.rockets().values()).containsExactlyInAnyOrder(savedRocket1, savedRocket2, savedRocket3);
         assertThat(savedMission.rockets().keySet()).containsExactlyInAnyOrder(rocket1Name, rocket2Name, rocket3Name);
-
-        //and returned objects match db state
-        assertThat(groupAssigmentResult.mission()).isEqualTo(savedMission);
-        assertThat(groupAssigmentResult.rockets()).hasSize(3);
-        assertThat(groupAssigmentResult.rockets()).containsExactlyInAnyOrder(savedRocket1, savedRocket2, savedRocket3);
     }
 
     @Test
     void shouldAssignEmptySetOfRocketsToMission() {
         //given new mission
         String missionName = "axis-z";
-        Mission mission = dragonRocketsRepository.addMission(missionName);
+        dragonRocketsRepository.addMission(missionName);
 
         //and empty set of rockets
-        Set<Rocket> rockets = Set.of();
+        Set<String> rockets = Set.of();
 
         //when empty set of rockets is assigned to mission
-        GroupAssigmentResult groupAssigmentResult = dragonRocketsRepository.assignRocketsToMission(rockets, mission);
+        dragonRocketsRepository.assignRocketsToMission(rockets, missionName);
 
         //then mission has no rockets
         Optional<Mission> optionalMission = missionRepository.findByName(missionName);
         assertThat(optionalMission).isNotEmpty();
         Mission savedMission = optionalMission.get();
         assertThat(savedMission.rockets()).hasSize(0);
-
-        //and returned objects match db state
-        assertThat(groupAssigmentResult.mission()).isEqualTo(savedMission);
-        assertThat(groupAssigmentResult.rockets()).hasSize(0);
     }
 
     @Test
     void shouldThrowExceptionWhenAssigningRocketsWhereOneAlreadyHasMission() {
         //given new mission
         String missionName = "axis-b";
+        String anotherMission = "axis-bc";
         Mission mission = dragonRocketsRepository.addMission(missionName);
+        dragonRocketsRepository.addMission(anotherMission);
 
         //and rockets where one already has a mission
         String rocket1Name = "fast-n1";
         String rocket2Name = "fast-n2";
         Rocket rocket1 = dragonRocketsRepository.addRocket(rocket1Name);
-        Rocket rocket2 = dragonRocketsRepository.addRocket(rocket2Name);
-        Rocket rocket2WithMission = rocket2.assignMission("existing");
-        Set<Rocket> rockets = Set.of(rocket1, rocket2WithMission);
+        dragonRocketsRepository.addRocket(rocket2Name);
+        dragonRocketsRepository.assignRocketToMission(rocket2Name, anotherMission);
+        Rocket rocket2 = rocketRepository.findByName(rocket2Name).get();
+        Set<String> rockets = Set.of(rocket1Name, rocket2Name);
 
         //when rockets are assigned to mission
-        assertThatThrownBy(() -> dragonRocketsRepository.assignRocketsToMission(rockets, mission))
+        assertThatThrownBy(() -> dragonRocketsRepository.assignRocketsToMission(rockets, missionName))
                 .isExactlyInstanceOf(IllegalStateException.class);
 
         //and no updates were made to db
@@ -271,25 +261,32 @@ class SpaceXDragonRocketsRepositoryTest {
         String missionName = "axis-c";
         Mission mission = dragonRocketsRepository.addMission(missionName);
 
+        String anotherMission = "axis-xs";
+        dragonRocketsRepository.addMission(anotherMission);
+
         //and rockets where multiple already have missions
         String rocket1Name = "fast-o1";
         String rocket2Name = "fast-o2";
         String rocket3Name = "fast-o3";
-        Rocket rocket1 = dragonRocketsRepository.addRocket(rocket1Name);
-        Rocket rocket1WithMission = rocket1.assignMission("existing1");
-        Rocket rocket2 = dragonRocketsRepository.addRocket(rocket2Name);
-        Rocket rocket3 = dragonRocketsRepository.addRocket(rocket3Name);
-        Rocket rocket3WithMission = rocket3.assignMission("existing2");
-        Set<Rocket> rockets = Set.of(rocket1WithMission, rocket2, rocket3WithMission);
+        dragonRocketsRepository.addRocket(rocket1Name);
+        dragonRocketsRepository.assignRocketToMission(rocket1Name, anotherMission);
+        dragonRocketsRepository.addRocket(rocket2Name);
+        dragonRocketsRepository.addRocket(rocket3Name);
+        dragonRocketsRepository.assignRocketToMission(rocket3Name, anotherMission);
+        Set<String> rockets = Set.of(rocket1Name, rocket2Name, rocket3Name);
+        mission = missionRepository.findByName(missionName).get();
 
         //when rockets are assigned to mission
-        assertThatThrownBy(() -> dragonRocketsRepository.assignRocketsToMission(rockets, mission))
+        assertThatThrownBy(() -> dragonRocketsRepository.assignRocketsToMission(rockets, missionName))
                 .isExactlyInstanceOf(IllegalStateException.class);
 
         //and no updates were made to db
-        assertThat(rocketRepository.findByName(rocket1Name)).hasValue(rocket1);
-        assertThat(rocketRepository.findByName(rocket2Name)).hasValue(rocket2);
-        assertThat(rocketRepository.findByName(rocket3Name)).hasValue(rocket3);
+        assertThat(rocketRepository.findByName(rocket1Name)).hasValueSatisfying(rocket ->
+                assertThat(rocket.missionName()).hasValue(anotherMission));
+        assertThat(rocketRepository.findByName(rocket2Name)).hasValueSatisfying(rocket ->
+                assertThat(rocket.missionName()).isEmpty());
+        assertThat(rocketRepository.findByName(rocket3Name)).hasValueSatisfying(rocket ->
+                assertThat(rocket.missionName()).hasValue(anotherMission));
         assertThat(missionRepository.findByName(missionName)).hasValue(mission);
     }
 
@@ -301,11 +298,11 @@ class SpaceXDragonRocketsRepositoryTest {
 
         //and single rocket in a set
         String rocketName = "fast-single";
-        Rocket rocket = dragonRocketsRepository.addRocket(rocketName);
-        Set<Rocket> rockets = Set.of(rocket);
+        dragonRocketsRepository.addRocket(rocketName);
+        Set<String> rockets = Set.of(rocketName);
 
         //when single rocket in set is assigned to mission
-        GroupAssigmentResult groupAssigmentResult = dragonRocketsRepository.assignRocketsToMission(rockets, mission);
+        dragonRocketsRepository.assignRocketsToMission(rockets, missionName);
 
         //then rocket has mission assigned
         Optional<Rocket> optionalRocket = rocketRepository.findByName(rocketName);
@@ -320,11 +317,6 @@ class SpaceXDragonRocketsRepositoryTest {
         Mission savedMission = optionalMission.get();
         assertThat(savedMission.rockets()).hasSize(1);
         assertThat(savedMission.rockets().get(rocketName)).isEqualTo(savedRocket);
-
-        //and returned objects match db state
-        assertThat(groupAssigmentResult.mission()).isEqualTo(savedMission);
-        assertThat(groupAssigmentResult.rockets()).hasSize(1);
-        assertThat(groupAssigmentResult.rockets()).contains(savedRocket);
     }
 
     @Test
@@ -350,11 +342,11 @@ class SpaceXDragonRocketsRepositoryTest {
     void shouldSetRocketAsDamagedWhenRocketHasMissionAssigned() {
         //given mission
         String missionName = "mission-n";
-        Mission mission = dragonRocketsRepository.addMission(missionName);
+        dragonRocketsRepository.addMission(missionName);
 
         //and rocket
         String rocketName = "forward-x";
-        Rocket rocket = dragonRocketsRepository.addRocket(rocketName);
+        dragonRocketsRepository.addRocket(rocketName);
 
         //when rocket is set as damaged
         dragonRocketsRepository.assignRocketToMission(rocketName, missionName);
@@ -403,11 +395,11 @@ class SpaceXDragonRocketsRepositoryTest {
     void shouldSetRocketAsRepairedWhenRocketHasMissionAssigned() {
         //given mission
         String missionName = "mission-o";
-        Mission mission = dragonRocketsRepository.addMission(missionName);
+        dragonRocketsRepository.addMission(missionName);
 
         //and rocket
         String rocketName = "forward-y";
-        Rocket rocket = dragonRocketsRepository.addRocket(rocketName);
+        dragonRocketsRepository.addRocket(rocketName);
 
         //and rocket is assigned to mission and then damaged
         dragonRocketsRepository.assignRocketToMission(rocketName, missionName);
@@ -466,7 +458,7 @@ class SpaceXDragonRocketsRepositoryTest {
     void shouldNotChangeRocketWhenAlreadyRepaired() {
         //given new rocket
         String rocketName = "already-repaired";
-        Rocket rocket = dragonRocketsRepository.addRocket(rocketName);
+        dragonRocketsRepository.addRocket(rocketName);
 
         //verify rocket starts in repaired state (ON_GROUND)
         Optional<Rocket> initialRocket = rocketRepository.findByName(rocketName);
@@ -502,15 +494,15 @@ class SpaceXDragonRocketsRepositoryTest {
     void shouldEndMissionWhenItHasRocketsAssigned() {
         //given mission with rockets
         String missionName = "mission-to-end-1";
-        Mission mission = dragonRocketsRepository.addMission(missionName);
+        dragonRocketsRepository.addMission(missionName);
 
         String rocket1Name = "rocket-end-1";
         String rocket2Name = "rocket-end-2";
-        Rocket rocket1 = dragonRocketsRepository.addRocket(rocket1Name);
-        Rocket rocket2 = dragonRocketsRepository.addRocket(rocket2Name);
+        dragonRocketsRepository.addRocket(rocket1Name);
+        dragonRocketsRepository.addRocket(rocket2Name);
 
-        mission = dragonRocketsRepository.assignRocketToMission(rocket1Name, missionName).mission();
-        mission = dragonRocketsRepository.assignRocketToMission(rocket2Name, missionName).mission();
+        dragonRocketsRepository.assignRocketToMission(rocket1Name, missionName);
+        dragonRocketsRepository.assignRocketToMission(rocket2Name, missionName);
 
         //verify rockets are assigned before ending mission
         Optional<Rocket> assignedRocket1 = rocketRepository.findByName(rocket1Name);
@@ -569,10 +561,10 @@ class SpaceXDragonRocketsRepositoryTest {
         String mission3Name = "gamma-mission";
         String mission4Name = "delta-mission";
 
-        Mission mission1 = dragonRocketsRepository.addMission(mission1Name); // will have 3 rockets
-        Mission mission2 = dragonRocketsRepository.addMission(mission2Name); // will have 1 rocket
-        Mission mission3 = dragonRocketsRepository.addMission(mission3Name); // will have 3 rockets
-        Mission mission4 = dragonRocketsRepository.addMission(mission4Name); // will have 0 rockets
+        dragonRocketsRepository.addMission(mission1Name); // will have 3 rockets
+        dragonRocketsRepository.addMission(mission2Name); // will have 1 rocket
+        dragonRocketsRepository.addMission(mission3Name); // will have 3 rockets
+        dragonRocketsRepository.addMission(mission4Name); // will have 0 rockets
 
         //and rockets assigned to missions
         Rocket rocket1 = dragonRocketsRepository.addRocket("rocket-1");
@@ -584,16 +576,16 @@ class SpaceXDragonRocketsRepositoryTest {
         Rocket rocket7 = dragonRocketsRepository.addRocket("rocket-7");
 
         // Assign rockets to create different counts
-        mission1 = dragonRocketsRepository.assignRocketToMission(rocket1.name(), mission1Name).mission();
-        mission1 = dragonRocketsRepository.assignRocketToMission(rocket2.name(), mission1Name).mission();
-        mission1 = dragonRocketsRepository.assignRocketToMission(rocket3.name(), mission1Name).mission(); // mission1: 3 rockets
+        dragonRocketsRepository.assignRocketToMission(rocket1.name(), mission1Name);
+        dragonRocketsRepository.assignRocketToMission(rocket2.name(), mission1Name);
+        dragonRocketsRepository.assignRocketToMission(rocket3.name(), mission1Name); // mission1: 3 rockets
         dragonRocketsRepository.setRocketAsDamaged(rocket1.name());
 
         dragonRocketsRepository.assignRocketToMission(rocket4.name(), mission2Name); // mission2: 1 rocket
 
-        mission3 = dragonRocketsRepository.assignRocketToMission(rocket5.name(), mission3Name).mission();
-        mission3 = dragonRocketsRepository.assignRocketToMission(rocket6.name(), mission3Name).mission();
-        mission3 = dragonRocketsRepository.assignRocketToMission(rocket7.name(), mission3Name).mission(); // mission3: 3 rockets
+        dragonRocketsRepository.assignRocketToMission(rocket5.name(), mission3Name);
+        dragonRocketsRepository.assignRocketToMission(rocket6.name(), mission3Name);
+        dragonRocketsRepository.assignRocketToMission(rocket7.name(), mission3Name); // mission3: 3 rockets
 
         // mission4: 0 rockets
 
@@ -618,8 +610,6 @@ class SpaceXDragonRocketsRepositoryTest {
         // Last: mission with 0 rockets
         assertThat(sortedMissions.get(3).name()).isEqualTo(mission4Name); // delta-mission (0 rockets)
         assertThat(sortedMissions.get(3).rockets()).hasSize(0);
-        summary.printSummary();
-
     }
 
     @Test
@@ -641,9 +631,9 @@ class SpaceXDragonRocketsRepositoryTest {
         String mission2Name = "alpha-mission";
         String mission3Name = "bravo-mission";
 
-        Mission mission1 = dragonRocketsRepository.addMission(mission1Name);
-        Mission mission2 = dragonRocketsRepository.addMission(mission2Name);
-        Mission mission3 = dragonRocketsRepository.addMission(mission3Name);
+        dragonRocketsRepository.addMission(mission1Name);
+        dragonRocketsRepository.addMission(mission2Name);
+        dragonRocketsRepository.addMission(mission3Name);
 
         //and all missions have same number of rockets (2 each)
         Rocket rocket1 = dragonRocketsRepository.addRocket("rocket-a");
@@ -653,14 +643,14 @@ class SpaceXDragonRocketsRepositoryTest {
         Rocket rocket5 = dragonRocketsRepository.addRocket("rocket-e");
         Rocket rocket6 = dragonRocketsRepository.addRocket("rocket-f");
 
-        mission1 = dragonRocketsRepository.assignRocketToMission(rocket1.name(), mission1Name).mission();
-        dragonRocketsRepository.assignRocketToMission(rocket2.name(), mission1Name); // charlie: 2 rockets
+        dragonRocketsRepository.assignRocketToMission(rocket1.name(), mission1Name);
+        dragonRocketsRepository.assignRocketToMission(rocket2.name(), mission1Name);
 
-        mission2 = dragonRocketsRepository.assignRocketToMission(rocket3.name(), mission2Name).mission();
-        dragonRocketsRepository.assignRocketToMission(rocket4.name(), mission2Name); // alpha: 2 rockets
+        dragonRocketsRepository.assignRocketToMission(rocket3.name(), mission2Name);
+        dragonRocketsRepository.assignRocketToMission(rocket4.name(), mission2Name);
 
-        mission3 = dragonRocketsRepository.assignRocketToMission(rocket5.name(), mission3Name).mission();
-        dragonRocketsRepository.assignRocketToMission(rocket6.name(), mission3Name); // bravo: 2 rockets
+        dragonRocketsRepository.assignRocketToMission(rocket5.name(), mission3Name);
+        dragonRocketsRepository.assignRocketToMission(rocket6.name(), mission3Name);
 
         //when getting dragons summary
         Summary summary = dragonRocketsRepository.getDragonsSummary();
@@ -669,15 +659,13 @@ class SpaceXDragonRocketsRepositoryTest {
         List<Mission> sortedMissions = summary.missions();
         assertThat(sortedMissions).hasSize(3);
 
-        assertThat(sortedMissions.get(0).name()).isEqualTo(mission1Name); // charlie-mission
-        assertThat(sortedMissions.get(1).name()).isEqualTo(mission3Name); // bravo-mission
-        assertThat(sortedMissions.get(2).name()).isEqualTo(mission2Name); // alpha-mission
+        assertThat(sortedMissions.get(0).name()).isEqualTo(mission1Name);
+        assertThat(sortedMissions.get(1).name()).isEqualTo(mission3Name);
+        assertThat(sortedMissions.get(2).name()).isEqualTo(mission2Name);
 
         // All should have same rocket count
         assertThat(sortedMissions.get(0).rockets()).hasSize(2);
         assertThat(sortedMissions.get(1).rockets()).hasSize(2);
         assertThat(sortedMissions.get(2).rockets()).hasSize(2);
-        summary.printSummary();
-
     }
 }
