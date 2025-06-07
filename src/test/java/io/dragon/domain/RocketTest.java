@@ -111,4 +111,33 @@ class RocketTest {
         assertThat(inRepair.missionName()).isEqualTo(rocket.missionName());
     }
 
+    @Test
+    void shouldRemoveMission() {
+        // given
+        Rocket rocket = new Rocket(ROCKET_NAME, RocketStatus.IN_SPACE, Optional.of("space program"));
+
+        // when
+        Rocket rocketWithMission = rocket.removeMission();
+
+        // then
+        assertThat(rocketWithMission.name()).isEqualTo(rocket.name());
+        assertThat(rocketWithMission.status()).isEqualTo(RocketStatus.ON_GROUND);
+        assertThat(rocketWithMission.missionName()).isEmpty();
+    }
+
+    @Test
+    void shouldRemoveMissionFromDamagedRocket() {
+        // given
+        Rocket rocket = new Rocket(ROCKET_NAME, RocketStatus.IN_REPAIR, Optional.of("space program"));
+
+        // when
+        Rocket rocketWithMission = rocket.removeMission();
+
+        // then
+        assertThat(rocketWithMission.name()).isEqualTo(rocket.name());
+        assertThat(rocketWithMission.status()).isEqualTo(RocketStatus.IN_REPAIR);
+        assertThat(rocketWithMission.missionName()).isEmpty();
+    }
+
+
 }

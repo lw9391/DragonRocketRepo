@@ -68,6 +68,16 @@ public class SpaceXDragonRocketsRepository {
         updateRocket(updatedRocket);
     }
 
+    public void endMission(String missionName) {
+        Mission mission = missionRepository.findByName(missionName)
+                .orElseThrow(() -> new IllegalStateException("Mission does not exist"));
+        mission.rockets().values().stream()
+                .map(Rocket::removeMission)
+                .forEach(rocketRepository::update);
+        Mission ended = mission.endMission();
+        missionRepository.update(ended);
+    }
+
     private void updateRocket(Rocket updatedRocket) {
         rocketRepository.update(updatedRocket);
         Optional<String> missionName = updatedRocket.missionName();

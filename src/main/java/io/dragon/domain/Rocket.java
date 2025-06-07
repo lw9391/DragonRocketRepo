@@ -26,4 +26,11 @@ public record Rocket(String name, RocketStatus status, Optional<String> missionN
         return new Rocket(this.name, newStatus, Optional.of(missionName));
     }
 
+    public Rocket removeMission() {
+        if (this.missionName.isEmpty()) throw new IllegalStateException("Mission is not assigned");
+        RocketStatus newStatus = this.status == RocketStatus.IN_REPAIR
+                ? RocketStatus.IN_REPAIR : RocketStatus.ON_GROUND;
+        return new Rocket(name, newStatus, Optional.empty());
+    }
+
 }

@@ -453,4 +453,79 @@ class SpaceXDragonRocketsRepositoryTest {
         assertThat(savedRocket).isEqualTo(rocketBeforeCall);
         assertThat(savedRocket.missionName()).isEmpty();
     }
+
+    @Test
+    void shouldThrowExceptionWhenMissionDoesNotExist() {
+        //given non-existing mission name
+        String nonExistingMissionName = "non-existing-mission";
+
+        //when trying to end mission that does not exist
+        //then exception is thrown
+        assertThatThrownBy(() -> dragonRocketsRepository.endMission(nonExistingMissionName))
+                .isExactlyInstanceOf(IllegalStateException.class)
+                .hasMessage("Mission does not exist");
+    }
+
+    @Test
+    void shouldEndMissionWhenItHasRocketsAssigned() {
+        //given mission with rockets
+        String missionName = "mission-to-end-1";
+        Mission mission = dragonRocketsRepository.addMission(missionName);
+
+        String rocket1Name = "rocket-end-1";
+        String rocket2Name = "rocket-end-2";
+        Rocket rocket1 = dragonRocketsRepository.addRocket(rocket1Name);
+        Rocket rocket2 = dragonRocketsRepository.addRocket(rocket2Name);
+
+        mission = dragonRocketsRepository.assignRocketToMission(rocket1, mission).mission();
+        mission = dragonRocketsRepository.assignRocketToMission(rocket2, mission).mission();
+
+        //verify rockets are assigned before ending mission
+        Optional<Rocket> assignedRocket1 = rocketRepository.findByName(rocket1Name);
+        Optional<Rocket> assignedRocket2 = rocketRepository.findByName(rocket2Name);
+        assertThat(assignedRocket1.get().missionName()).hasValue(missionName);
+        assertThat(assignedRocket2.get().missionName()).hasValue(missionName);
+
+        //when mission is ended
+        dragonRocketsRepository.endMission(missionName);
+
+        //then mission is marked as ended
+        Optional<Mission> optionalMission = missionRepository.findByName(missionName);
+        assertThat(optionalMission).isNotEmpty();
+        Mission endedMission = optionalMission.get();
+        assertThat(endedMission.isEnded()).isTrue();
+        assertThat(endedMission.rockets()).isEmpty();
+
+        //and rockets are de-assigned from mission
+        Optional<Rocket> deassignedRocket1 = rocketRepository.findByName(rocket1Name);
+        Optional<Rocket> deassignedRocket2 = rocketRepository.findByName(rocket2Name);
+        assertThat(deassignedRocket1).isNotEmpty();
+        assertThat(deassignedRocket2).isNotEmpty();
+        assertThat(deassignedRocket1.get().missionName()).isEmpty();
+        assertThat(deassignedRocket2.get().missionName()).isEmpty();
+
+        //and rockets status is updated
+        assertThat(deassignedRocket1.get().status()).isEqualTo(RocketStatus.ON_GROUND);
+        assertThat(deassignedRocket2.get().status()).isEqualTo(RocketStatus.ON_GROUND);
+    }
+
+    @Test
+    void shouldEndMissionIfNoRocketsAssigned() {
+        //given mission with no rockets
+        String missionName = "mission-to-end-2";
+        Mission mission = dragonRocketsRepository.addMission(missionName);
+
+        //verify mission has no rockets
+        assertThat(mission.rockets()).isEmpty();
+
+        //when mission is ended
+        dragonRocketsRepository.endMission(missionName);
+
+        //then mission is marked as ended
+        Optional<Mission> optionalMission = missionRepository.findByName(missionName);
+        assertThat(optionalMission).isNotEmpty();
+        Mission endedMission = optionalMission.get();
+        assertThat(endedMission.isEnded()).isTrue();
+        assertThat(endedMission.rockets()).isEmpty();
+    }
 }
