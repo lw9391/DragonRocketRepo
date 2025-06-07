@@ -26,4 +26,12 @@ public class SpaceXDragonRocketsRepository {
         Mission mission = Mission.create(missionName);
         return missionRepository.save(mission);
     }
+
+    public AssigmentResult assignRocketToMission(Rocket rocket, Mission mission) {
+        Rocket withMission = rocket.assignMission(mission.name());
+        Mission withRocket = mission.assignRocket(withMission);
+        rocketRepository.update(withMission);
+        missionRepository.update(withRocket);
+        return new AssigmentResult(withRocket, withMission);
+    }
 }
