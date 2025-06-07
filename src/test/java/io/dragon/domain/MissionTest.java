@@ -43,6 +43,20 @@ class MissionTest {
         assertThat(withRocket.name()).isEqualTo(MISSION_NAME);
     }
 
+    @Test
+    void shouldThrowExceptionWhenAssignRocketToMissionWhichIsAlreadyAssigned() {
+        //given new mission
+        Mission mission = Mission.create(MISSION_NAME);
+
+        //when rocket is assigned
+        Rocket rocket = Rocket.createNewRocket("lion");
+        Mission withRocket = mission.assignRocket(rocket);
+
+        //then
+        assertThatThrownBy(() -> withRocket.assignRocket(rocket))
+                .isExactlyInstanceOf(IllegalArgumentException.class);
+    }
+
     @ParameterizedTest(name = "Should end mission {0}")
     @MethodSource("missions")
     void shouldEndMission(Mission mission) {
