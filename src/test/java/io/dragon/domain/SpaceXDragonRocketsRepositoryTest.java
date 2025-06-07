@@ -6,7 +6,6 @@ import io.dragon.domain.exception.MissionAlreadyExistsException;
 import io.dragon.domain.exception.RocketAlreadyExistsException;
 import org.junit.jupiter.api.Test;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -93,10 +92,10 @@ class SpaceXDragonRocketsRepositoryTest {
 
         //and new rocket
         String rocketName = "fast-l";
-        Rocket rocket = dragonRocketsRepository.addRocket(rocketName);
+        dragonRocketsRepository.addRocket(rocketName);
 
         //when rocket is assigned to mission
-        AssigmentResult assigmentResult = dragonRocketsRepository.assignRocketToMission(rocket, mission);
+        AssigmentResult assigmentResult = dragonRocketsRepository.assignRocketToMission(rocketName, missionName);
 
         //then mission object is assign to rocket
         Optional<Rocket> optionalRocket = rocketRepository.findByName(rocketName);
@@ -120,17 +119,48 @@ class SpaceXDragonRocketsRepositoryTest {
     }
 
     @Test
+    void shouldThrowExceptionWhenAssigningNonExistingRocketToMission() {
+        //given new mission
+        String missionName = "axis-x";
+        Mission mission = dragonRocketsRepository.addMission(missionName);
+
+        //and non existing rocket
+        String rocketName = "fast-l";
+
+        //when rocket is assigned to mission exception is thrown
+        assertThatThrownBy(() -> dragonRocketsRepository.assignRocketToMission(rocketName, missionName))
+                .isExactlyInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void shouldThrowExceptionWhenAssigningRocketToNonExistingMission() {
+        //given non existing mission
+        String missionName = "axis-x";
+
+        //and rocket
+        String rocketName = "fast-l";
+        dragonRocketsRepository.addRocket(rocketName);
+
+        //when rocket is assigned to mission exception is thrown
+        assertThatThrownBy(() -> dragonRocketsRepository.assignRocketToMission(rocketName, missionName))
+                .isExactlyInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
     void shouldThrowExceptionWhenAssigningRocketWhichAlreadyHasMission() {
         //given new mission
         String missionName = "axis-a";
-        Mission mission = dragonRocketsRepository.addMission(missionName);
+        String anotherMission = "axis-b";
+        dragonRocketsRepository.addMission(missionName);
+        dragonRocketsRepository.addMission(anotherMission);
 
         //and rocket with mission
         String rocketName = "fast-xl";
-        Rocket rocket = dragonRocketsRepository.addRocket(rocketName).assignMission("existing");
+        dragonRocketsRepository.addRocket(rocketName);
+        dragonRocketsRepository.assignRocketToMission(rocketName, missionName);
 
-        //when rocket is assigned to mission
-        assertThatThrownBy(() -> dragonRocketsRepository.assignRocketToMission(rocket, mission))
+        //when rocket is assigned to another mission
+        assertThatThrownBy(() -> dragonRocketsRepository.assignRocketToMission(rocketName, anotherMission))
                 .isExactlyInstanceOf(IllegalStateException.class);
     }
 
@@ -327,7 +357,7 @@ class SpaceXDragonRocketsRepositoryTest {
         Rocket rocket = dragonRocketsRepository.addRocket(rocketName);
 
         //when rocket is set as damaged
-        dragonRocketsRepository.assignRocketToMission(rocket, mission);
+        dragonRocketsRepository.assignRocketToMission(rocketName, missionName);
         dragonRocketsRepository.setRocketAsDamaged(rocketName);
 
         //then rocket is updated
@@ -347,7 +377,7 @@ class SpaceXDragonRocketsRepositoryTest {
     void shouldSetRocketAsRepaired() {
         //given new rocket
         String rocketName = "fast-p";
-        Rocket rocket = dragonRocketsRepository.addRocket(rocketName);
+        dragonRocketsRepository.addRocket(rocketName);
 
         //and rocket is set as damaged first
         dragonRocketsRepository.setRocketAsDamaged(rocketName);
@@ -380,7 +410,7 @@ class SpaceXDragonRocketsRepositoryTest {
         Rocket rocket = dragonRocketsRepository.addRocket(rocketName);
 
         //and rocket is assigned to mission and then damaged
-        dragonRocketsRepository.assignRocketToMission(rocket, mission);
+        dragonRocketsRepository.assignRocketToMission(rocketName, missionName);
         dragonRocketsRepository.setRocketAsDamaged(rocketName);
 
         //verify rocket is damaged and assigned to mission
@@ -409,7 +439,7 @@ class SpaceXDragonRocketsRepositoryTest {
     void shouldNotChangeRocketWhenAlreadyDamaged() {
         //given new rocket
         String rocketName = "already-damaged";
-        Rocket rocket = dragonRocketsRepository.addRocket(rocketName);
+        dragonRocketsRepository.addRocket(rocketName);
 
         //and rocket is already set as damaged
         dragonRocketsRepository.setRocketAsDamaged(rocketName);
@@ -479,8 +509,8 @@ class SpaceXDragonRocketsRepositoryTest {
         Rocket rocket1 = dragonRocketsRepository.addRocket(rocket1Name);
         Rocket rocket2 = dragonRocketsRepository.addRocket(rocket2Name);
 
-        mission = dragonRocketsRepository.assignRocketToMission(rocket1, mission).mission();
-        mission = dragonRocketsRepository.assignRocketToMission(rocket2, mission).mission();
+        mission = dragonRocketsRepository.assignRocketToMission(rocket1Name, missionName).mission();
+        mission = dragonRocketsRepository.assignRocketToMission(rocket2Name, missionName).mission();
 
         //verify rockets are assigned before ending mission
         Optional<Rocket> assignedRocket1 = rocketRepository.findByName(rocket1Name);
@@ -554,16 +584,16 @@ class SpaceXDragonRocketsRepositoryTest {
         Rocket rocket7 = dragonRocketsRepository.addRocket("rocket-7");
 
         // Assign rockets to create different counts
-        mission1 = dragonRocketsRepository.assignRocketToMission(rocket1, mission1).mission();
-        mission1 = dragonRocketsRepository.assignRocketToMission(rocket2, mission1).mission();
-        mission1 = dragonRocketsRepository.assignRocketToMission(rocket3, mission1).mission(); // mission1: 3 rockets
+        mission1 = dragonRocketsRepository.assignRocketToMission(rocket1.name(), mission1Name).mission();
+        mission1 = dragonRocketsRepository.assignRocketToMission(rocket2.name(), mission1Name).mission();
+        mission1 = dragonRocketsRepository.assignRocketToMission(rocket3.name(), mission1Name).mission(); // mission1: 3 rockets
         dragonRocketsRepository.setRocketAsDamaged(rocket1.name());
 
-        dragonRocketsRepository.assignRocketToMission(rocket4, mission2); // mission2: 1 rocket
+        dragonRocketsRepository.assignRocketToMission(rocket4.name(), mission2Name); // mission2: 1 rocket
 
-        mission3 = dragonRocketsRepository.assignRocketToMission(rocket5, mission3).mission();
-        mission3 = dragonRocketsRepository.assignRocketToMission(rocket6, mission3).mission();
-        mission3 = dragonRocketsRepository.assignRocketToMission(rocket7, mission3).mission(); // mission3: 3 rockets
+        mission3 = dragonRocketsRepository.assignRocketToMission(rocket5.name(), mission3Name).mission();
+        mission3 = dragonRocketsRepository.assignRocketToMission(rocket6.name(), mission3Name).mission();
+        mission3 = dragonRocketsRepository.assignRocketToMission(rocket7.name(), mission3Name).mission(); // mission3: 3 rockets
 
         // mission4: 0 rockets
 
@@ -623,14 +653,14 @@ class SpaceXDragonRocketsRepositoryTest {
         Rocket rocket5 = dragonRocketsRepository.addRocket("rocket-e");
         Rocket rocket6 = dragonRocketsRepository.addRocket("rocket-f");
 
-        mission1 = dragonRocketsRepository.assignRocketToMission(rocket1, mission1).mission();
-        dragonRocketsRepository.assignRocketToMission(rocket2, mission1); // charlie: 2 rockets
+        mission1 = dragonRocketsRepository.assignRocketToMission(rocket1.name(), mission1Name).mission();
+        dragonRocketsRepository.assignRocketToMission(rocket2.name(), mission1Name); // charlie: 2 rockets
 
-        mission2 = dragonRocketsRepository.assignRocketToMission(rocket3, mission2).mission();
-        dragonRocketsRepository.assignRocketToMission(rocket4, mission2); // alpha: 2 rockets
+        mission2 = dragonRocketsRepository.assignRocketToMission(rocket3.name(), mission2Name).mission();
+        dragonRocketsRepository.assignRocketToMission(rocket4.name(), mission2Name); // alpha: 2 rockets
 
-        mission3 = dragonRocketsRepository.assignRocketToMission(rocket5, mission3).mission();
-        dragonRocketsRepository.assignRocketToMission(rocket6, mission3); // bravo: 2 rockets
+        mission3 = dragonRocketsRepository.assignRocketToMission(rocket5.name(), mission3Name).mission();
+        dragonRocketsRepository.assignRocketToMission(rocket6.name(), mission3Name); // bravo: 2 rockets
 
         //when getting dragons summary
         Summary summary = dragonRocketsRepository.getDragonsSummary();

@@ -29,7 +29,11 @@ public class SpaceXDragonRocketsRepository {
         return missionRepository.save(mission);
     }
 
-    public AssigmentResult assignRocketToMission(Rocket rocket, Mission mission) {
+    public AssigmentResult assignRocketToMission(String rocketName, String missionName) {
+        Rocket rocket = rocketRepository.findByName(rocketName)
+                .orElseThrow(() -> new IllegalArgumentException("Rocket does not exist"));
+        Mission mission = missionRepository.findByName(missionName)
+                .orElseThrow(() -> new IllegalArgumentException("Mission does not exist"));
         Rocket withMission = rocket.assignMission(mission.name());
         Mission withRocket = mission.assignRocket(withMission);
         rocketRepository.update(withMission);
