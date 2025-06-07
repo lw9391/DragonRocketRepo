@@ -10,4 +10,6 @@ public interface RocketRepository {
 
     Optional<Rocket> findByName(String id);
 
+    boolean exists(String id);
+
 }

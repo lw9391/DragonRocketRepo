@@ -76,4 +76,23 @@ class InMemoryRocketRepositoryTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Rocket %s doesn't exist".formatted(rocketName));
     }
+
+    @Test
+    void shouldCheckIfRocketExists() {
+        //given non-existing rocket
+        String rocketName = "draco 111";
+
+        //when checking if rocket exists
+        boolean exists = rocketRepository.exists(rocketName);
+
+        //then exists returns false
+        assertThat(exists).isFalse();
+
+        //when rocket is added
+        rocketRepository.save(Rocket.createNewRocket(rocketName));
+
+        //then exists return true
+        exists = rocketRepository.exists(rocketName);
+        assertThat(exists).isTrue();
+    }
 }

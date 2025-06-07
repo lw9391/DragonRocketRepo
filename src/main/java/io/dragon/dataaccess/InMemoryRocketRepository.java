@@ -26,14 +26,18 @@ public class InMemoryRocketRepository implements RocketRepository {
     @Override
     public Rocket update(Rocket rocket) {
         if (!rockets.containsKey(rocket.name()))
-            throw  new IllegalArgumentException(String.format("Rocket %s doesn't exist", rocket.name()));
+            throw new IllegalArgumentException(String.format("Rocket %s doesn't exist", rocket.name()));
         rockets.put(rocket.name(), rocket);
         return rocket;
     }
 
+    @Override
     public Optional<Rocket> findByName(String rocketName) {
         return Optional.ofNullable(rockets.get(rocketName));
     }
 
-
+    @Override
+    public boolean exists(String id) {
+        return rockets.containsKey(id);
+    }
 }
