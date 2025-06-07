@@ -3,6 +3,9 @@ package io.dragon.domain;
 import io.dragon.domain.exception.MissionAlreadyExistsException;
 import io.dragon.domain.exception.RocketAlreadyExistsException;
 
+import java.util.List;
+import java.util.Set;
+
 public class SpaceXDragonRocketsRepository {
 
     private final RocketRepository rocketRepository;
@@ -33,5 +36,18 @@ public class SpaceXDragonRocketsRepository {
         rocketRepository.update(withMission);
         missionRepository.update(withRocket);
         return new AssigmentResult(withRocket, withMission);
+    }
+
+    public GroupAssigmentResult assignRocketsToMission(Set<Rocket> rockets, Mission mission) {
+        List<Rocket> rocketsWithMission = rockets.stream()
+                .map(rocket -> rocket.assignMission(mission.name()))
+                .toList();
+        Mission withRockets = mission;
+        for (Rocket withMission : rocketsWithMission) {
+            withRockets = withRockets.assignRocket(withMission);
+        }
+        rocketsWithMission.forEach(rocketRepository::update);
+        missionRepository.update(withRockets);
+        return new GroupAssigmentResult(withRockets, rocketsWithMission);
     }
 }
