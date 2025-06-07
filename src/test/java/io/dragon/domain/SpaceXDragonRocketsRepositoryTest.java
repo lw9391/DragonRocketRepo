@@ -3,7 +3,9 @@ package io.dragon.domain;
 import io.dragon.dataaccess.InMemoryMissionRepository;
 import io.dragon.dataaccess.InMemoryRocketRepository;
 import io.dragon.domain.exception.MissionAlreadyExistsException;
+import io.dragon.domain.exception.MissionDoesNotExistException;
 import io.dragon.domain.exception.RocketAlreadyExistsException;
+import io.dragon.domain.exception.RocketDoesNotExistException;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -125,7 +127,7 @@ class SpaceXDragonRocketsRepositoryTest {
 
         //when rocket is assigned to mission exception is thrown
         assertThatThrownBy(() -> dragonRocketsRepository.assignRocketToMission(rocketName, missionName))
-                .isExactlyInstanceOf(IllegalArgumentException.class);
+                .isExactlyInstanceOf(RocketDoesNotExistException.class);
     }
 
     @Test
@@ -139,7 +141,7 @@ class SpaceXDragonRocketsRepositoryTest {
 
         //when rocket is assigned to mission exception is thrown
         assertThatThrownBy(() -> dragonRocketsRepository.assignRocketToMission(rocketName, missionName))
-                .isExactlyInstanceOf(IllegalArgumentException.class);
+                .isExactlyInstanceOf(MissionDoesNotExistException.class);
     }
 
     @Test
@@ -486,8 +488,7 @@ class SpaceXDragonRocketsRepositoryTest {
         //when trying to end mission that does not exist
         //then exception is thrown
         assertThatThrownBy(() -> dragonRocketsRepository.endMission(nonExistingMissionName))
-                .isExactlyInstanceOf(IllegalStateException.class)
-                .hasMessage("Mission does not exist");
+                .isExactlyInstanceOf(MissionDoesNotExistException.class);
     }
 
     @Test

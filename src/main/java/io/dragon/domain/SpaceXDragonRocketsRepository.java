@@ -1,7 +1,9 @@
 package io.dragon.domain;
 
 import io.dragon.domain.exception.MissionAlreadyExistsException;
+import io.dragon.domain.exception.MissionDoesNotExistException;
 import io.dragon.domain.exception.RocketAlreadyExistsException;
+import io.dragon.domain.exception.RocketDoesNotExistException;
 
 import java.util.*;
 
@@ -31,9 +33,9 @@ public class SpaceXDragonRocketsRepository {
 
     public void assignRocketToMission(String rocketName, String missionName) {
         Rocket rocket = rocketRepository.findByName(rocketName)
-                .orElseThrow(() -> new IllegalArgumentException("Rocket does not exist"));
+                .orElseThrow(() -> new RocketDoesNotExistException(rocketName));
         Mission mission = missionRepository.findByName(missionName)
-                .orElseThrow(() -> new IllegalArgumentException("Mission does not exist"));
+                .orElseThrow(() -> new MissionDoesNotExistException(missionName));
         Rocket withMission = rocket.assignMission(mission.name());
         Mission withRocket = mission.assignRocket(withMission);
         rocketRepository.update(withMission);
@@ -42,11 +44,11 @@ public class SpaceXDragonRocketsRepository {
 
     public void assignRocketsToMission(Set<String> rocketsNames, String missionName) {
         List<Rocket> rocketsWithMission = rocketsNames.stream()
-                .map(name -> rocketRepository.findByName(name).orElseThrow(() -> new IllegalArgumentException("Rocket does not exist")))
+                .map(name -> rocketRepository.findByName(name).orElseThrow(() -> new RocketDoesNotExistException(name)))
                 .map(rocket -> rocket.assignMission(missionName))
                 .toList();
         Mission withRockets = missionRepository.findByName(missionName)
-                .orElseThrow(() -> new IllegalArgumentException("Mission does not exist"));
+                .orElseThrow(() -> new MissionDoesNotExistException(missionName));
         for (Rocket withMission : rocketsWithMission) {
             withRockets = withRockets.assignRocket(withMission);
         }
@@ -56,7 +58,7 @@ public class SpaceXDragonRocketsRepository {
 
     public void setRocketAsDamaged(String rocketName) {
         Rocket rocket = rocketRepository.findByName(rocketName)
-                .orElseThrow(() -> new IllegalStateException("Rocket does not exists"));
+                .orElseThrow(() -> new RocketDoesNotExistException(rocketName));
         if (rocket.status() == RocketStatus.IN_REPAIR) return;
         Rocket updatedRocket = rocket.inRepair();
         updateRocket(updatedRocket);
@@ -64,7 +66,7 @@ public class SpaceXDragonRocketsRepository {
 
     public void setRocketAsRepaired(String rocketName) {
         Rocket rocket = rocketRepository.findByName(rocketName)
-                .orElseThrow(() -> new IllegalStateException("Rocket does not exists"));
+                .orElseThrow(() -> new RocketDoesNotExistException(rocketName));
         if (rocket.status() != RocketStatus.IN_REPAIR) return;
         Rocket updatedRocket = rocket.repaired();
         updateRocket(updatedRocket);
@@ -72,7 +74,7 @@ public class SpaceXDragonRocketsRepository {
 
     public void endMission(String missionName) {
         Mission mission = missionRepository.findByName(missionName)
-                .orElseThrow(() -> new IllegalStateException("Mission does not exist"));
+                .orElseThrow(() -> new MissionDoesNotExistException(missionName));
         mission.rockets().values().stream()
                 .map(Rocket::removeMission)
                 .forEach(rocketRepository::update);
@@ -94,8 +96,9 @@ public class SpaceXDragonRocketsRepository {
         rocketRepository.update(updatedRocket);
         Optional<String> missionName = updatedRocket.missionName();
         if (missionName.isPresent()) {
-            Mission mission = missionRepository.findByName(missionName.get())
-                    .orElseThrow(() -> new IllegalStateException("Mission does not exist"));
+            String name = missionName.get();
+            Mission mission = missionRepository.findByName(name)
+                    .orElseThrow(() -> new MissionDoesNotExistException(name));
             Mission updatedMission = mission.updateRocket(updatedRocket);
             missionRepository.update(updatedMission);
         }

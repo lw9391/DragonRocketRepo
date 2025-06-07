@@ -24,7 +24,7 @@ public class InMemoryMissionRepository implements MissionRepository {
     @Override
     public Mission update(Mission mission) {
         if (!missions.containsKey(mission.name()))
-            throw  new IllegalArgumentException(String.format("Mission %s doesn't exist", mission.name()));
+            throw new IllegalArgumentException(String.format("Mission %s doesn't exist", mission.name()));
         missions.put(mission.name(), mission);
         return mission;
     }

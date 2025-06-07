@@ -1,6 +1,8 @@
 package io.dragon.domain;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 public record Mission(String name, Map<String, Rocket> rockets, boolean isEnded) {
 
@@ -42,7 +44,7 @@ public record Mission(String name, Map<String, Rocket> rockets, boolean isEnded)
         StringBuilder sb = new StringBuilder();
         sb.append(name).append(" - ").append(status().printableName).append(" - Dragons: ").append(rockets.size())
                 .append("\n");
-        rockets.values().forEach(rocket ->  sb.append("\t").append(rocket.printToStatus()).append("\n"));
+        rockets.values().forEach(rocket -> sb.append("\t").append(rocket.printToStatus()).append("\n"));
         return sb.toString();
     }
 
