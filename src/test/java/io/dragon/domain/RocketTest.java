@@ -18,7 +18,7 @@ class RocketTest {
         //then
         assertThat(rocket.name()).isEqualTo(ROCKET_NAME);
         assertThat(rocket.status()).isEqualTo(RocketStatus.ON_GROUND);
-        assertThat(rocket.mission()).isEmpty();
+        assertThat(rocket.missionName()).isEmpty();
     }
 
     @Test
@@ -32,7 +32,7 @@ class RocketTest {
         //then
         assertThat(inRepair.name()).isEqualTo(rocket.name());
         assertThat(inRepair.status()).isEqualTo(RocketStatus.IN_REPAIR);
-        assertThat(inRepair.mission()).isEqualTo(rocket.mission());
+        assertThat(inRepair.missionName()).isEqualTo(rocket.missionName());
     }
 
     @Test
@@ -42,13 +42,13 @@ class RocketTest {
         Mission mission = Mission.create("Mars exploration");
 
         // when
-        Rocket rocketWithMission = rocket.assignMission(mission);
+        Rocket rocketWithMission = rocket.assignMission(mission.name());
 
         // then
         assertThat(rocketWithMission.name()).isEqualTo(rocket.name());
         assertThat(rocketWithMission.status()).isEqualTo(RocketStatus.IN_SPACE);
-        assertThat(rocketWithMission.mission()).isPresent();
-        assertThat(rocketWithMission.mission().get()).isEqualTo(mission);
+        assertThat(rocketWithMission.missionName()).isPresent();
+        assertThat(rocketWithMission.missionName().get()).isEqualTo(mission.name());
     }
 
     @Test
@@ -58,13 +58,13 @@ class RocketTest {
         Mission mission = Mission.create("Moon landing");
 
         // when
-        Rocket rocketWithMission = rocket.assignMission(mission);
+        Rocket rocketWithMission = rocket.assignMission(mission.name());
 
         // then
         assertThat(rocketWithMission.name()).isEqualTo(rocket.name());
         assertThat(rocketWithMission.status()).isEqualTo(RocketStatus.IN_REPAIR);
-        assertThat(rocketWithMission.mission()).isPresent();
-        assertThat(rocketWithMission.mission().get()).isEqualTo(mission);
+        assertThat(rocketWithMission.missionName()).isPresent();
+        assertThat(rocketWithMission.missionName().get()).isEqualTo(mission.name());
     }
 
     @Test
@@ -73,10 +73,10 @@ class RocketTest {
         Rocket rocket = Rocket.createNewRocket(ROCKET_NAME);
         Mission firstMission =  Mission.create("Mars exploration");
         Mission secondMission = Mission.create("Moon landing");
-        Rocket rocketWithMission = rocket.assignMission(firstMission);
+        Rocket rocketWithMission = rocket.assignMission(firstMission.name());
 
         // when & then
-        assertThatThrownBy(() -> rocketWithMission.assignMission(secondMission))
+        assertThatThrownBy(() -> rocketWithMission.assignMission(secondMission.name()))
                 .isInstanceOf(IllegalStateException.class)
                 .hasMessage("Mission already assigned");
     }

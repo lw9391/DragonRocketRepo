@@ -26,7 +26,6 @@ public record Mission(String name, List<Rocket> rockets, boolean isEnded) {
         else if (rockets.isEmpty()) return MissionStatus.SCHEDULED;
         else if (hasDamagedRocket()) return MissionStatus.PENDING;
         else return MissionStatus.IN_PROGRESS;
-
     }
 
     private boolean hasDamagedRocket() {
