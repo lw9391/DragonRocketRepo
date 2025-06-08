@@ -105,9 +105,6 @@ class SpaceXDragonRocketsRepositoryTest {
         Rocket savedRocket = optionalRocket.get();
         assertThat(savedRocket.missionName()).hasValue(mission.name());
 
-        //and rocket status is updated
-        assertThat(savedRocket.status()).isEqualTo(RocketStatus.IN_SPACE);
-
         //and rocket is assigned to mission
         Optional<Mission> optionalMission = missionRepository.findByName(missionName);
         assertThat(optionalMission).isNotEmpty();
@@ -196,11 +193,6 @@ class SpaceXDragonRocketsRepositoryTest {
         assertThat(savedRocket1.missionName()).hasValue(mission.name());
         assertThat(savedRocket2.missionName()).hasValue(mission.name());
         assertThat(savedRocket3.missionName()).hasValue(mission.name());
-
-        //and all rockets status is updated
-        assertThat(savedRocket1.status()).isEqualTo(RocketStatus.IN_SPACE);
-        assertThat(savedRocket2.status()).isEqualTo(RocketStatus.IN_SPACE);
-        assertThat(savedRocket3.status()).isEqualTo(RocketStatus.IN_SPACE);
 
         //and all rockets are assigned to mission
         Optional<Mission> optionalMission = missionRepository.findByName(missionName);
@@ -311,7 +303,6 @@ class SpaceXDragonRocketsRepositoryTest {
         assertThat(optionalRocket).isNotEmpty();
         Rocket savedRocket = optionalRocket.get();
         assertThat(savedRocket.missionName()).hasValue(mission.name());
-        assertThat(savedRocket.status()).isEqualTo(RocketStatus.IN_SPACE);
 
         //and rocket is assigned to mission
         Optional<Mission> optionalMission = missionRepository.findByName(missionName);
@@ -322,14 +313,14 @@ class SpaceXDragonRocketsRepositoryTest {
     }
 
     @Test
-    void shouldSetRocketAsDamaged() {
+    void shouldSetRocketStatus() {
         //given new rocket
         String rocketName = "fast-o";
         Rocket rocket = dragonRocketsRepository.addRocket(rocketName);
         assertThat(rocket.status()).isEqualTo(RocketStatus.ON_GROUND);
 
         //when rocket is set as damaged
-        dragonRocketsRepository.setRocketAsDamaged(rocketName);
+        dragonRocketsRepository.setRocketStatus(rocketName, RocketStatus.IN_REPAIR);
 
         //then rocket status is updated
         Optional<Rocket> optionalRocket = rocketRepository.findByName(rocketName);
@@ -352,7 +343,7 @@ class SpaceXDragonRocketsRepositoryTest {
 
         //when rocket is set as damaged
         dragonRocketsRepository.assignRocketToMission(rocketName, missionName);
-        dragonRocketsRepository.setRocketAsDamaged(rocketName);
+        dragonRocketsRepository.setRocketStatus(rocketName, RocketStatus.IN_REPAIR);
 
         //then rocket is updated
         Optional<Rocket> optionalRocket = rocketRepository.findByName(rocketName);
@@ -365,32 +356,9 @@ class SpaceXDragonRocketsRepositoryTest {
         //and mission is updated
         Mission savedMission = missionRepository.findByName(missionName).get();
         assertThat(savedMission.rockets().get(rocketName)).isEqualTo(savedRocket);
-    }
 
-    @Test
-    void shouldSetRocketAsRepaired() {
-        //given new rocket
-        String rocketName = "fast-p";
-        dragonRocketsRepository.addRocket(rocketName);
-
-        //and rocket is set as damaged first
-        dragonRocketsRepository.setRocketAsDamaged(rocketName);
-
-        //verify rocket is damaged
-        Optional<Rocket> damagedRocket = rocketRepository.findByName(rocketName);
-        assertThat(damagedRocket).isNotEmpty();
-        assertThat(damagedRocket.get().status()).isEqualTo(RocketStatus.IN_REPAIR);
-
-        //when rocket is set as repaired
-        dragonRocketsRepository.setRocketAsRepaired(rocketName);
-
-        //then rocket status is updated
-        Optional<Rocket> optionalRocket = rocketRepository.findByName(rocketName);
-        assertThat(optionalRocket).isNotEmpty();
-        Rocket savedRocket = optionalRocket.get();
-        assertThat(savedRocket.missionName()).isEmpty();
-        assertThat(savedRocket.name()).isEqualTo(rocketName);
-        assertThat(savedRocket.status()).isEqualTo(RocketStatus.ON_GROUND);
+        //and mission is pending
+        assertThat(savedMission.status()).isEqualTo(MissionStatus.PENDING);
     }
 
     @Test
@@ -405,7 +373,7 @@ class SpaceXDragonRocketsRepositoryTest {
 
         //and rocket is assigned to mission and then damaged
         dragonRocketsRepository.assignRocketToMission(rocketName, missionName);
-        dragonRocketsRepository.setRocketAsDamaged(rocketName);
+        dragonRocketsRepository.setRocketStatus(rocketName, RocketStatus.IN_REPAIR);
 
         //verify rocket is damaged and assigned to mission
         Optional<Rocket> damagedRocket = rocketRepository.findByName(rocketName);
@@ -413,8 +381,12 @@ class SpaceXDragonRocketsRepositoryTest {
         assertThat(damagedRocket.get().status()).isEqualTo(RocketStatus.IN_REPAIR);
         assertThat(damagedRocket.get().missionName()).hasValue(missionName);
 
+        //and mission is pending
+        Mission savedMission = missionRepository.findByName(missionName).get();
+        assertThat(savedMission.status()).isEqualTo(MissionStatus.PENDING);
+
         //when rocket is set as repaired
-        dragonRocketsRepository.setRocketAsRepaired(rocketName);
+        dragonRocketsRepository.setRocketStatus(rocketName, RocketStatus.IN_SPACE);
 
         //then rocket is updated
         Optional<Rocket> optionalRocket = rocketRepository.findByName(rocketName);
@@ -425,59 +397,11 @@ class SpaceXDragonRocketsRepositoryTest {
         assertThat(savedRocket.status()).isEqualTo(RocketStatus.IN_SPACE);
 
         //and mission is updated
-        Mission savedMission = missionRepository.findByName(missionName).get();
+        savedMission = missionRepository.findByName(missionName).get();
         assertThat(savedMission.rockets().get(rocketName)).isEqualTo(savedRocket);
-    }
 
-    @Test
-    void shouldNotChangeRocketWhenAlreadyDamaged() {
-        //given new rocket
-        String rocketName = "already-damaged";
-        dragonRocketsRepository.addRocket(rocketName);
-
-        //and rocket is already set as damaged
-        dragonRocketsRepository.setRocketAsDamaged(rocketName);
-
-        //verify rocket is damaged
-        Optional<Rocket> damagedRocket = rocketRepository.findByName(rocketName);
-        assertThat(damagedRocket).isNotEmpty();
-        assertThat(damagedRocket.get().status()).isEqualTo(RocketStatus.IN_REPAIR);
-        Rocket rocketBeforeSecondCall = damagedRocket.get();
-
-        //when rocket is set as damaged again
-        dragonRocketsRepository.setRocketAsDamaged(rocketName);
-
-        //then rocket status remains the same
-        Optional<Rocket> optionalRocket = rocketRepository.findByName(rocketName);
-        assertThat(optionalRocket).isNotEmpty();
-        Rocket savedRocket = optionalRocket.get();
-        assertThat(savedRocket.status()).isEqualTo(RocketStatus.IN_REPAIR);
-        assertThat(savedRocket).isEqualTo(rocketBeforeSecondCall);
-        assertThat(savedRocket.missionName()).isEmpty();
-    }
-
-    @Test
-    void shouldNotChangeRocketWhenAlreadyRepaired() {
-        //given new rocket
-        String rocketName = "already-repaired";
-        dragonRocketsRepository.addRocket(rocketName);
-
-        //verify rocket starts in repaired state (ON_GROUND)
-        Optional<Rocket> initialRocket = rocketRepository.findByName(rocketName);
-        assertThat(initialRocket).isNotEmpty();
-        assertThat(initialRocket.get().status()).isEqualTo(RocketStatus.ON_GROUND);
-        Rocket rocketBeforeCall = initialRocket.get();
-
-        //when rocket is set as repaired (but it's already in repaired state)
-        dragonRocketsRepository.setRocketAsRepaired(rocketName);
-
-        //then rocket status remains the same
-        Optional<Rocket> optionalRocket = rocketRepository.findByName(rocketName);
-        assertThat(optionalRocket).isNotEmpty();
-        Rocket savedRocket = optionalRocket.get();
-        assertThat(savedRocket.status()).isEqualTo(RocketStatus.ON_GROUND);
-        assertThat(savedRocket).isEqualTo(rocketBeforeCall);
-        assertThat(savedRocket.missionName()).isEmpty();
+        //and mission is back in progress
+        assertThat(savedMission.status()).isEqualTo(MissionStatus.IN_PROGRESS);
     }
 
     @Test
@@ -580,7 +504,7 @@ class SpaceXDragonRocketsRepositoryTest {
         dragonRocketsRepository.assignRocketToMission(rocket1.name(), mission1Name);
         dragonRocketsRepository.assignRocketToMission(rocket2.name(), mission1Name);
         dragonRocketsRepository.assignRocketToMission(rocket3.name(), mission1Name); // mission1: 3 rockets
-        dragonRocketsRepository.setRocketAsDamaged(rocket1.name());
+        dragonRocketsRepository.setRocketStatus(rocket1.name(), RocketStatus.IN_REPAIR);
 
         dragonRocketsRepository.assignRocketToMission(rocket4.name(), mission2Name); // mission2: 1 rocket
 

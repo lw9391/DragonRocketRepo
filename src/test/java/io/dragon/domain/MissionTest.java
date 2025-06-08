@@ -111,7 +111,7 @@ class MissionTest {
         // given
         Mission mission = Mission.create(MISSION_NAME);
         Rocket healthyRocket = Rocket.createNewRocket("falcon");
-        Rocket damagedRocket = Rocket.createNewRocket("dragon").inRepair();
+        Rocket damagedRocket = Rocket.createNewRocket("dragon").setStatus(RocketStatus.IN_REPAIR);
         Mission missionWithRockets = mission.assignRocket(healthyRocket)
                 .assignRocket(damagedRocket);
 
@@ -126,8 +126,8 @@ class MissionTest {
     void shouldReturnPendingStatusForMissionWithOnlyDamagedRockets() {
         // given
         Mission mission = Mission.create(MISSION_NAME);
-        Rocket damagedRocket1 = Rocket.createNewRocket("falcon").inRepair();
-        Rocket damagedRocket2 = Rocket.createNewRocket("dragon").inRepair();
+        Rocket damagedRocket1 = Rocket.createNewRocket("falcon").setStatus(RocketStatus.IN_REPAIR);
+        Rocket damagedRocket2 = Rocket.createNewRocket("dragon").setStatus(RocketStatus.IN_REPAIR);
         Mission missionWithRockets = mission.assignRocket(damagedRocket1).assignRocket(damagedRocket2);
 
         // when

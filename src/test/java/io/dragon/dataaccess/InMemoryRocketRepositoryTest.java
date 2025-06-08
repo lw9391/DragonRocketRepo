@@ -1,6 +1,7 @@
 package io.dragon.dataaccess;
 
 import io.dragon.domain.Rocket;
+import io.dragon.domain.RocketStatus;
 import org.junit.jupiter.api.Test;
 
 import java.util.Optional;
@@ -50,7 +51,7 @@ class InMemoryRocketRepositoryTest {
 
         //when rocket is added to the repository
         rocketRepository.save(newRocket);
-        Rocket updated = newRocket.inRepair();
+        Rocket updated = newRocket.setStatus(RocketStatus.IN_REPAIR);
 
         //then rocket is added
         Rocket savedUpdated = rocketRepository.update(updated);

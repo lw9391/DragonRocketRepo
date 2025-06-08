@@ -32,19 +32,16 @@ or other instance management mechanisms were implemented. It is viable to create
 This design choice was made for simplicity reasons in this task; we can assume such architectural concerns should be handled by 
 a framework or application container as technical implementation details.
 
-Rocket statuses - The API provides a way to either set a rocket as being in repair or to set a rocket to a state indicating it has been repaired.
-The other status depends on whether the rocket was assigned to a mission. Therefore, from this perspective, it does not make
-sense to allow explicitly setting the ON_GROUND status. The API allows setting a rocket as damaged, which will change its status to
-IN_REPAIR, and allows setting a rocket as being fine, and the status will be set to ON_GROUND if no mission is assigned or
-to IN_SPACE if a mission was assigned.
+Rocket statuses - The API provides a way to manually set a rocket status, unless you try to send a rocket into space without 
+a mission, which is forbidden and will cause an exception. Rocket status influences mission status, which is described below.
 
 Mission statuses - Besides the situation when a mission is ended, mission status solely depends on the rockets that are assigned
-to a mission, if any. Therefore, as above, it makes no sense to set status on demand as it would only make the stored data
+to a mission, if any. Therefore, it makes no sense to set status on demand as it would only make the stored data
 inconsistent. The API provides a method to end a mission, which will remove rockets from the mission and set its status
-explicitly as ended.
+explicitly as ended. Mission statuses are handled automatically by the provided API, there is no need to manually change them each time.
 
-Mission statuses and rocket statuses (besides the situations described above) are handled automatically by the provided API;
-there is no need to manually change them each time.
+That being said, the task is somewhat vague on status handling. More interpretations could be made and more solutions
+are possible. I decided to stick to automatic status changing for missions and manual status handling for rockets.
 
 The author considers the task description more like product/business requirements to implement, not like a technical recipe
 to rewrite in a programming language; therefore, the API was implemented this way.
@@ -90,30 +87,32 @@ dragonRocketsRepository.assignRocketToMission("rocket-1", mission1Name);
 dragonRocketsRepository.assignRocketToMission("rocket-2", mission1Name);
 dragonRocketsRepository.assignRocketToMission("rocket-3", mission1Name); // mission1: 3 rockets
 //one rocket set as damaged
-dragonRocketsRepository.setRocketAsDamaged("rocket-1");
+dragonRocketsRepository.setRocketStatus(rocket1.name(), RocketStatus.IN_REPAIR);
 
 dragonRocketsRepository.assignRocketToMission("rocket-4", mission2Name); // mission2: 1 rocket
 
 dragonRocketsRepository.assignRocketToMission("rocket-5", mission3Name);
 dragonRocketsRepository.assignRocketToMission("rocket-6", mission3Name);
 dragonRocketsRepository.assignRocketToMission("rocket-7", mission3Name); // mission3: 3 rockets
+dragonRocketsRepository.setRocketStatus(rocket5.name(), RocketStatus.IN_SPACE);
+dragonRocketsRepository.setRocketStatus(rocket6.name(), RocketStatus.IN_SPACE);
 Summary summary = dragonRocketsRepository.getDragonsSummary();
 summary.printSummary();
 ```
 Output:
 ```
 gamma-mission - In Progress - Dragons: 3
-	rocket-6 - In space
-	rocket-7 - In space
 	rocket-5 - In space
+	rocket-6 - In space
+	rocket-7 - On ground
 
 alpha-mission - Pending - Dragons: 3
+	rocket-2 - On ground
+	rocket-3 - On ground
 	rocket-1 - In repair
-	rocket-2 - In space
-	rocket-3 - In space
 
 beta-mission - In Progress - Dragons: 1
-	rocket-4 - In space
+	rocket-4 - On ground
 
 delta-mission - Scheduled - Dragons: 0
 ```
@@ -131,12 +130,12 @@ summary.printSummary();
 Output:
 ```
 gamma-mission - In Progress - Dragons: 3
-	rocket-7 - In space
-	rocket-6 - In space
 	rocket-5 - In space
+	rocket-6 - In space
+	rocket-7 - On ground
 
 beta-mission - In Progress - Dragons: 1
-	rocket-4 - In space
+	rocket-4 - On ground
 
 delta-mission - Scheduled - Dragons: 0
 

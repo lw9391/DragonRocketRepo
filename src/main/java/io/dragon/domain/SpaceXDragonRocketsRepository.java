@@ -56,19 +56,11 @@ public class SpaceXDragonRocketsRepository {
         missionRepository.update(withRockets);
     }
 
-    public void setRocketAsDamaged(String rocketName) {
+    public void setRocketStatus(String rocketName, RocketStatus status) {
         Rocket rocket = rocketRepository.findByName(rocketName)
                 .orElseThrow(() -> new RocketDoesNotExistException(rocketName));
-        if (rocket.status() == RocketStatus.IN_REPAIR) return;
-        Rocket updatedRocket = rocket.inRepair();
-        updateRocket(updatedRocket);
-    }
-
-    public void setRocketAsRepaired(String rocketName) {
-        Rocket rocket = rocketRepository.findByName(rocketName)
-                .orElseThrow(() -> new RocketDoesNotExistException(rocketName));
-        if (rocket.status() != RocketStatus.IN_REPAIR) return;
-        Rocket updatedRocket = rocket.repaired();
+        if (rocket.status() == status) return;
+        Rocket updatedRocket = rocket.setStatus(status);
         updateRocket(updatedRocket);
     }
 
