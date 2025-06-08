@@ -10,6 +10,12 @@ It provides operations as follows:
 * end mission
 * get summary of stored data
 
+### Stack
+Java 17 (Eclipse Temurin 17.0.15)
+Gradle 8.14.1
+
+After cloning, you can build it with the Gradle wrapper using `./gradlew build`.
+
 ### Assumptions
 There are a few clarifications that need to be made.
 
